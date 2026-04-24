@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: hospital_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - USER_SERVICE_URL=http://user-service:5002
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5003
+      - PRESCRIPTION_SERVICE_URL=http://prescription-service:5004
+    depends_on:
+      - auth-service
+      - user-service
+      - appointment-service
+      - prescription-service
+
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth_service
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGO_URI=mongodb://root:secret@mongodb:27017/auth_db?authSource=admin
+      - JWT_SECRET=supersecretjwtkey_auth
+    depends_on:
+      - mongodb
+
+  user-service:
+    build:
+      context: ./user-service
+    container_name: user_service
+    ports:
+      - "5002:5002"
+    environment:
+      - PORT=5002
+      - MONGO_URI=mongodb://root:secret@mongodb:27017/user_db?authSource=admin
+      - JWT_SECRET=supersecretjwtkey_auth
+      - SMTP_HOST=smtp.ethereal.email
+      - SMTP_PORT=587
+      - SMTP_USER=your_ethereal_user
+      - SMTP_PASS=your_ethereal_password
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - mongodb
+
+  appointment-service:
+    build:
+      context: ./appointment-service
+    container_name: appointment_service
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+      - MONGO_URI=mongodb://root:secret@mongodb:27017/appointment_db?authSource=admin
+      - JWT_SECRET=supersecretjwtkey_auth
+      - USER_SERVICE_URL=http://user-service:5002
+    depends_on:
+      - mongodb
+
+  prescription-service:
+    build:
+      context: ./prescription-service
+    container_name: prescription_service
+    ports:
+      - "5004:5004"
+    environment:
+      - PORT=5004
+      - MONGO_URI=mongodb://root:secret@mongodb:27017/prescription_db?authSource=admin
+      - JWT_SECRET=supersecretjwtkey_auth
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5003
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_app
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  mongo_data:

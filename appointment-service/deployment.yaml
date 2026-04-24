@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointment-service
+  labels:
+    app: appointment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointment-service
+  template:
+    metadata:
+      labels:
+        app: appointment-service
+    spec:
+      containers:
+      - name: appointment-service
+        image: appointment-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5003
+        env:
+        - name: PORT
+          value: "5003"
+        - name: MONGO_URI
+          value: "mongodb://root:secret@mongodb:27017/appointment_db?authSource=admin"
+        - name: JWT_SECRET
+          value: "supersecretjwtkey_auth"
+        - name: USER_SERVICE_URL
+          value: "http://user-service:5002"

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prescription-service
+  labels:
+    app: prescription-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prescription-service
+  template:
+    metadata:
+      labels:
+        app: prescription-service
+    spec:
+      containers:
+      - name: prescription-service
+        image: prescription-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5004
+        env:
+        - name: PORT
+          value: "5004"
+        - name: MONGO_URI
+          value: "mongodb://root:secret@mongodb:27017/prescription_db?authSource=admin"
+        - name: JWT_SECRET
+          value: "supersecretjwtkey_auth"
+        - name: APPOINTMENT_SERVICE_URL
+          value: "http://appointment-service:5003"

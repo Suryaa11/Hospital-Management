@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: user-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5002
+        env:
+        - name: PORT
+          value: "5002"
+        - name: MONGO_URI
+          value: "mongodb://root:secret@mongodb:27017/user_db?authSource=admin"
+        - name: JWT_SECRET
+          value: "supersecretjwtkey_auth"
+        - name: SMTP_HOST
+          value: "smtp.ethereal.email"
+        - name: SMTP_PORT
+          value: "587"
+        - name: SMTP_USER
+          value: "your_ethereal_user"
+        - name: SMTP_PASS
+          value: "your_ethereal_password"
+        - name: FRONTEND_URL
+          value: "http://localhost:3000"
